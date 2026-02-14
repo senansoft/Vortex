@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Auto-Post Manager</title>
+    
+    <!-- 1. Tailwind CSS (للتصميم الجاهز) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. FontAwesome (للأيقونات) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- تنسيقات إضافية بسيطة -->
+    <style>
+        .tweet-card:hover { transform: translateY(-2px); }
+        /* تحسين شكل شريط التمرير */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+
+    <!-- القائمة الجانبية (Sidebar) -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-2xl z-10 hidden md:flex">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
+            <i class="fa-brands fa-twitter text-3xl text-blue-400"></i>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide">AutoTweet</h1>
+                <p class="text-xs text-slate-400">Bot Manager v1.0</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 mt-4">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-blue-600 rounded-xl shadow-lg shadow-blue-900/50 text-white transition-all">
+                <i class="fa-solid fa-gauge-high w-6"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                <i class="fa-solid fa-list-check w-6"></i> History
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                <i class="fa-solid fa-gear w-6"></i> API Settings
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <button class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-sm transition text-slate-300">
+                <i class="fa-solid fa-power-off"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- الهيدر العلوي -->
+        <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm z-10">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-slate-600"><i class="fa-solid fa-bars text-xl"></i></button>
+                <h2 class="text-xl font-bold text-slate-700">Dashboard Overview</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <div class="text-sm font-bold">Admin User</div>
+                    <div class="text-xs text-green-500">● Online</div>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" class="w-10 h-10 rounded-full border-2 border-slate-100 shadow-sm">
+            </div>
+        </header>
+
+        <!-- منطقة العمل (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-8 bg-slate-50">
+            
+            <!-- البطاقات الإحصائية -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- بطاقة 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition">
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium mb-1">Pending Tweets</p>
+                        <h3 class="text-3xl font-bold text-slate-800" id="pending-count">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                </div>
+                <!-- بطاقة 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition">
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium mb-1">Published Total</p>
+                        <h3 class="text-3xl font-bold text-slate-800">1,240</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                </div>
+                <!-- بطاقة 3 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition">
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium mb-1">Next Run</p>
+                        <h3 class="text-xl font-bold text-slate-800">59m 30s</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم الجدول والزر -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 class="text-lg font-bold text-slate-700">Scheduled Queue</h3>
+                    <button onclick="openModal()" class="bg-slate-900 hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-slate-300 transition-all flex items-center gap-2 group">
+                        <i class="fa-solid fa-plus group-hover:rotate-90 transition-transform"></i> New Tweet
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                            <tr>
+                                <th class="p-5">Content</th>
+                                <th class="p-5 w-48">Scheduled For</th>
+                                <th class="p-5 w-32">Status</th>
+                                <th class="p-5 w-24 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tweet-list" class="divide-y divide-slate-100 text-sm">
+                            <!-- سيتم تعبئة البيانات هنا بواسطة JS -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- حالة عدم وجود بيانات -->
+                    <div id="empty-state" class="hidden p-12 text-center">
+                        <div class="inline-flex bg-slate-100 p-4 rounded-full text-slate-400 mb-4">
+                            <i class="fa-solid fa-inbox text-2xl"></i>
+                        </div>
+                        <h4 class="text-slate-600 font-medium">No tweets scheduled</h4>
+                        <p class="text-slate-400 text-sm mt-1">Click "New Tweet" to get started.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- نافذة إضافة تغريدة (Modal) -->
+    <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300" aria-hidden="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div id="modal-content" class="bg-white w-full max-w-lg rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300">
+                
+                <!-- رأس النافذة -->
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-slate-800">Schedule Tweet</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <!-- نموذج الإدخال -->
+                <form onsubmit="handleSubmit(event)" class="p-6">
+                    <!-- نص التغريدة -->
+                    <div class="mb-5 relative">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Tweet Content</label>
+                        <textarea id="tweet-text" rows="4" 
+                            class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition resize-none text-slate-700"
+                            placeholder="What's happening? Type your tweet here..."
+                            maxlength="280" required></textarea>
+                        
+                        <!-- عداد الأحرف -->
+                        <div class="flex justify-between mt-2">
+                            <span class="text-xs text-slate-400">Basic text only</span>
+                            <span id="char-counter" class="text-xs font-bold text-slate-400">0/280</span>
+                        </div>
+                    </div>
+
+                    <!-- التوقيت -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Publish Time</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-calendar absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="datetime-local" id="tweet-time" 
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 font-mono" required>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> System will auto-post at this time.</p>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition">Cancel</button>
+                        <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Confirm Schedule</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (المنطق البرمجي) -->
+    <script>
+        // --- 1. State Management (إدارة البيانات) ---
+        // في المشروع الحقيقي، هذه البيانات تأتي من الباك إند (Django API)
+        let tweets = [
+            { id: 1, text: "🔥 Just deployed my new Django project! #python #webdev", time: "2026-02-14T14:00", status: "pending" },
+            { id: 2, text: "Automating my social media life with Python. 🐍", time: "2026-02-14T15:30", status: "published" },
+        ];
+
+        // --- 2. DOM Elements (العناصر) ---
+        const tweetList = document.getElementById('tweet-list');
+        const emptyState = document.getElementById('empty-state');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        const charCounter = document.getElementById('char-counter');
+        const tweetInput = document.getElementById('tweet-text');
+        const pendingCountEl = document.getElementById('pending-count');
+
+        // --- 3. Render Function (دالة العرض) ---
+        function render() {
+            tweetList.innerHTML = "";
+            let pending = 0;
+
+            if (tweets.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                tweets.forEach(tweet => {
+                    if(tweet.status === 'pending') pending++;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition group";
+                    
+                    // تحديد لون الحالة
+                    const statusClass = tweet.status === 'published' 
+                        ? 'bg-green-100 text-green-700 border-green-200' 
+                        : 'bg-amber-100 text-amber-700 border-amber-200';
+                    
+                    const statusIcon = tweet.status === 'published' 
+                        ? '<i class="fa-solid fa-check mr-1"></i> Sent' 
+                        : '<i class="fa-regular fa-clock mr-1"></i> Queue';
+
+                    // تحويل التاريخ لصيغة مقروءة
+                    const dateObj = new Date(tweet.time);
+                    const dateStr = dateObj.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                    tr.innerHTML = `
+                        <td class="p-5 font-medium text-slate-700 group-hover:text-blue-600 transition truncate max-w-xs" title="${tweet.text}">
+                            ${tweet.text}
+                        </td>
+                        <td class="p-5 text-slate-500 font-mono text-xs">
+                            ${dateStr}
+                        </td>
+                        <td class="p-5">
+                            <span class="${statusClass} border px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide inline-flex items-center">
+                                ${statusIcon}
+                            </span>
+                        </td>
+                        <td class="p-5 text-center">
+                            <button onclick="deleteTweet(${tweet.id})" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Delete Tweet">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                    tweetList.appendChild(tr);
+                });
+            }
+            
+            // تحديث العداد
+            pendingCountEl.innerText = pending;
+            animateValue(pendingCountEl, 0, pending, 500);
+        }
+
+        // --- 4. Add & Delete Logic (الإضافة والحذف) ---
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            const text = document.getElementById('tweet-text').value;
+            const time = document.getElementById('tweet-time').value;
+
+            const newTweet = {
+                id: Date.now(),
+                text: text,
+                time: time,
+                status: 'pending'
+            };
+
+            // إضافة للبداية
+            tweets.unshift(newTweet);
+            render();
+            closeModal();
+            
+            // إظهار رسالة نجاح (Toast بسيط)
+            alert("Tweet scheduled successfully! 🚀"); 
+            e.target.reset();
+        }
+
+        function deleteTweet(id) {
+            if(confirm("Are you sure you want to cancel this tweet?")) {
+                tweets = tweets.filter(t => t.id !== id);
+                render();
+            }
+        }
+
+        // --- 5. UI Helpers (مساعدات الواجهة) ---
+        function openModal() {
+            modalOverlay.classList.remove('hidden');
+            // Hack for transition
+            setTimeout(() => {
+                modalOverlay.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalOverlay.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+            }, 300);
+        }
+
+        // عداد الأحرف الملون
+        tweetInput.addEventListener('input', (e) => {
+            const len = e.target.value.length;
+            charCounter.innerText = `${len}/280`;
+            
+            if(len > 260) charCounter.className = "text-xs font-bold text-red-500";
+            else if(len > 200) charCounter.className = "text-xs font-bold text-amber-500";
+            else charCounter.className = "text-xs font-bold text-slate-400";
+        });
+
+        // إغلاق النافذة عند الضغط خارجها
+        modalOverlay.addEventListener('click', (e) => {
+            if(e.target === modalOverlay) closeModal();
+        });
+
+        // دالة بسيطة لتحريك الأرقام
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // تشغيل أولي
+        render();
+
+    </script>
+</body>
+</html>
